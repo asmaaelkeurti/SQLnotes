@@ -1,0 +1,54 @@
+select * from (select rownum r, v.PluID, v.PluCode, v.PluName, v.ClsCode, v.ClsName, v.MaterialCode from vSkuPluCgory v) where r >= 80000;
+
+select rownum r, v.PluID, v.PluCode, v.PluName, v.ClsCode, v.ClsName, v.MaterialCode from vSkuPluCgory v where rownum <= 80000;
+
+
+select p.pluid, p.plucode, p.MaterialCode,p.pluname, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp14 flag   
+  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
+where substr(a.clscode,1,1) = b.clscode 
+		and substr(a.clscode,1,3) = c.clscode 
+		and substr(a.clscode,1,5) = d.clscode 
+		and p.clsid = a.clsid
+		and substr(a.clscode,1,1) = 0
+		and substr(a.clscode,1,3) <> 011;
+
+
+
+
+
+select a.clsid clsid1, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel   
+  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d 
+where substr(a.clscode,1,1) = b.clscode and substr(a.clscode,1,3) = c.clscode and substr(a.clscode,1,5) = d.clscode;
+
+Select         f.BranchName,
+               f.PFSaleNo,
+               t.pluname, 
+               t.MATERIALCODE,
+               t.PLUMODEL,
+               p.clscode, 
+               p.clsname, 
+               d.Counts,
+               d.ystotal,
+               d.PFTotal
+          From vtSkuplu                  t,
+               tCatCategory              p, 
+               torgdrpdisp               h,  
+               tOrgDrpRelation           g, 
+               tDrpEtpCustform           i, 
+               tDrpEtpCustdetail         e,
+               tmgpfsaleform_rpt@hsrpt   f,
+               tmgpfsaledetail_rpt@hsrpt d
+         Where f.PFSaleNo = d.pfsaleno and f.branchno = d.branchno 
+           and e.Orgcode = f.Branchno and e.CustCode = f.CustomerCode 
+           and i.Orgcode = g.Orgcode 
+           and e.kid = i.kid  
+           and f.branchno = h.orgcode 
+           and d.plucode = t.plucode  
+           and t.clsid = p.clsid 
+           and substr(p.clscode,1,1) = '0' 
+           and e.ISPERFECT = '1' 
+           and f.Rzdate between '2017-09-11' and '2017-09-11'
+		   
+		   
+select TransactionCode, datetime(SaleDate/1000,'unixepoch') from zawushe_saleDetail limit 5;
+select TransactionCode, date(SaleDate/1000,'unixepoch') from zawushe_saleDetail limit 5;
