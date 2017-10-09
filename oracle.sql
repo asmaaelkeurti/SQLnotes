@@ -170,3 +170,78 @@ where h.jgzccode = b.jgzccode
   ;
   
   select * from tskuetpparas where pluid = '800001700';
+
+CREATE PUBLIC database link finance 
+CONNECT TO admin IDENTIFIED BY oracle USING '192.168.8.67:1521/xe';
+
+select * from zawushe_saledetail@finance where rownum < 10;
+
+DROP PUBLIC DATABASE LINK finance;
+
+
+CREATE PUBLIC database link finance 
+CONNECT TO admin IDENTIFIED BY oracle USING '192.168.8.67:1521/xe';
+
+create public database link drpmid
+connect to mganalyze identified by mganalyze using '192.168.0.118:1521/DRPMID';
+
+copy from mganalyze/mganalyze@'192.168.0.118:1521:DRPMID' to admin/oracle@'192.168.8.67:1521/xe' create torgdrprelation using select * from torgdrprelation;
+
+select * from zawushe_saledetail@finance where rownum < 10;
+
+DROP PUBLIC DATABASE LINK finance;
+
+select * from DBA_DB_LINKS;
+
+select * from tskuplu@DRPMID where rownum < 10;
+
+Select *
+  From (
+Select h.branchno,h.customercode,b.plucode,b.counts
+  From tmgpfsaledetail_rpt@hsrpt b,tmgpfsaleform_rpt@hsrpt h
+ Where b.branchno = h.branchno And b.pfsaleno = h.pfsaleno
+   And h.rzdate Between '2017-08-20' And '2017-09-20'
+Union All
+Select h.branchno,h.customercode,b.plucode,-b.counts As counts
+  From tmgpfreturndetail_rpt@hsrpt b,tmgpfreturnform_rpt@hsrpt h
+ Where b.branchno = h.branchno And b.pfreturnno = h.pfreturnno
+   And h.rzdate Between '2017-08-20' And '2017-09-20'
+       ) s,tdrpetpcustdetail c,torgdrprelation r
+ Where s.branchno = c.orgcode 
+   And s.customercode = c.custcode 
+   And s.branchno = r.orgcode; 
+
+Select *
+  From (
+Select h.branchno,h.customercode,b.plucode,b.counts
+  From tmgpfsaledetail_rpt@hsrpt b,tmgpfsaleform_rpt@hsrpt h
+ Where b.branchno = h.branchno And b.pfsaleno = h.pfsaleno
+   And h.rzdate Between '2017-09-20' And '2017-09-20'
+Union All
+Select h.branchno,h.customercode,b.plucode,-b.counts As counts
+  From tmgpfreturndetail_rpt@hsrpt b,tmgpfreturnform_rpt@hsrpt h
+ Where b.branchno = h.branchno And b.pfreturnno = h.pfreturnno
+   And h.rzdate Between '2017-09-20' And '2017-09-20'
+       ) s,torgdrprelation r
+ Where s.branchno = r.orgcode; 
+ 
+ select count(*) from tdrpetpcustdetail;
+ 
+ select * from DBA_TEMP_FREE_SPACE;
+ 
+ select * from torgdrprelation@drpmid where rownum < 10;
+ --connect mganalyze/mganalyze@192.168.0.118/DRPMID
+
+select p.pluid, p.plucode, p.MaterialCode,p.pluname, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp14 flag   
+  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
+where substr(a.clscode,1,1) = b.clscode 
+		and substr(a.clscode,1,3) = c.clscode 
+		and substr(a.clscode,1,5) = d.clscode 
+		and p.clsid = a.clsid
+		and substr(a.clscode,1,1) = 0
+		and substr(a.clscode,1,3) <> 011;
+        
+select count(distinct(CONCAT(orgcode,custcode))) from tdrpetpcustdetail;
+
+select count(*) from tskuplu;
+
