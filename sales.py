@@ -55,7 +55,7 @@ month = [
         ]
 
 
-skuQuery = """select p.pluid,p.plucode,p.materialcode,p.pluname,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,
+skuQuery = """select p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,
     (case when f.evaluationname IS NOT NULL THEN f.evaluationname
           when e.clsname IS NOT NULL THEN '考试项目'
           when p.functionality = 'C' THEN '考试项目'
@@ -63,7 +63,7 @@ skuQuery = """select p.pluid,p.plucode,p.materialcode,p.pluname,p.clsid,p.clscod
           else '其它品类'
     END) adjusted
     from
-(select p.pluid, p.plucode, p.MaterialCode,p.pluname, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag   
+(select p.pluid, p.plucode, p.pluModel, p.MaterialCode, p.pluname, p.LRDate, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag   
   from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
 where substr(a.clscode,1,1) = b.clscode 
 		and substr(a.clscode,1,3) = c.clscode 
@@ -75,7 +75,15 @@ where substr(a.clscode,1,1) = b.clscode
             on p.lowLevel = f.clsname
         left join otherExamItemList@finance e
             on p.plucode = e.plucode
-        group by p.pluid,p.plucode,p.materialcode,p.pluname,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname"""
+        left join (select  p.MATERIALCODE,
+                    max(b.price) as price
+                    from tPrcPsJgzcHead h, tPrcPsJgzcBody b, tskuplu p
+                    where h.jgzccode = b.jgzccode
+                    and currcode = '0' 
+                    and b.plucode = p.plucode
+                    and length(h.orgcode) = 1 group by p.MATERIALCODE
+          ) price on p.materialcode = price.materialcode
+        group by p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price"""
 
 skuData = pd.read_sql(skuQuery,con=con)
 
@@ -97,6 +105,7 @@ salesQuery = """select u.materialcode,sum(u.pstotal) total
       and to_char(h.jzdate, 'YYYY-MM-DD') between '%s' and '%s') u 
   group by u.materialcode"""
 
+
 for m in month:
     print(m)
     data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
@@ -104,7 +113,27 @@ for m in month:
     data = data.rename(columns={'TOTAL':m[0]})
     skuData = pd.merge(skuData,data,how='left',on=['MATERIALCODE'])
     skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
+
+skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal.xlsx')
+
+skuData = pd.read_sql(skuQuery,con=con)
+del skuData['PRICE']
+
+cols = skuData.columns
+cols = list(cols)
+cols.append('TOTAL')
+fanxu = pd.DataFrame(columns=cols)
+
+for m in month:
+    print(m)
+    data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
+    data['TOTAL'] = data['TOTAL']/1000.0
+    temp = pd.merge(skuData,data,how='left', on=['MATERIALCODE'])
+    temp['date'] = m[0]
+    temp['TOTAL'].fillna(0,inplace=True)
+    fanxu = pd.concat([fanxu,temp])
+
     
 
-skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu.xlsx')
+fanxu.to_excel('c:\\Users\\150972\\Desktop\\fanxu-vertical.xlsx')
 
