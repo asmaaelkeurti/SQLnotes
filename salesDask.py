@@ -34,32 +34,33 @@ Created on Tue Oct 10 15:45:55 2017
 
 import cx_Oracle as oracle
 import pandas as pd
+import numpy as np
 
 con = oracle.connect('mganalyze/mganalyze@192.168.0.118/DRPMID')
 month = [
             ['2017-10-01','2017-10-31'],
             ['2017-09-01','2017-09-30'],
-            #['2017-08-01','2017-08-31'],
-            #['2017-07-01','2017-07-31'],
-            #['2017-06-01','2017-06-30'],
-            #['2017-05-01','2017-05-31'],
-            #['2017-04-01','2017-04-30'],
-            #['2017-03-01','2017-03-31'],
-            #['2017-02-01','2017-02-28'],
-            #['2017-01-01','2017-01-31'],
+            ['2017-08-01','2017-08-31'],
+            ['2017-07-01','2017-07-31'],
+            ['2017-06-01','2017-06-30'],
+            ['2017-05-01','2017-05-31'],
+            ['2017-04-01','2017-04-30'],
+            ['2017-03-01','2017-03-31'],
+            ['2017-02-01','2017-02-28'],
+            ['2017-01-01','2017-01-31'],
             
-            #['2016-12-01','2016-12-31'],
-            #['2016-11-01','2016-11-30'],
-            #['2016-10-01','2016-10-31'],
-            #['2016-09-01','2016-09-30'],
-            #['2016-08-01','2016-08-31'],
-            #['2016-07-01','2016-07-31'],
-            #['2016-06-01','2016-06-30'],
-            #['2016-05-01','2016-05-31'],
-            #['2016-04-01','2016-04-30'],
-            #['2016-03-01','2016-03-31'],
-            #['2016-02-01','2016-02-29'],
-            #['2016-01-01','2016-01-31'],
+            ['2016-12-01','2016-12-31'],
+            ['2016-11-01','2016-11-30'],
+            ['2016-10-01','2016-10-31'],
+            ['2016-09-01','2016-09-30'],
+            ['2016-08-01','2016-08-31'],
+            ['2016-07-01','2016-07-31'],
+            ['2016-06-01','2016-06-30'],
+            ['2016-05-01','2016-05-31'],
+            ['2016-04-01','2016-04-30'],
+            ['2016-03-01','2016-03-31'],
+            ['2016-02-01','2016-02-29'],
+            ['2016-01-01','2016-01-31'],
         ]
 
 
@@ -115,9 +116,9 @@ where substr(a.clscode,1,1) = b.clscode
                 Lane2018,Lane2017"""
 
 skuData = pd.read_sql(skuQuery,con=con)
+skuData.to_csv('F:\\DataWarehouse\\sku.csv',index=False)
 
-
-salesQuery = """ select u.materialcode,sum(u.pstotal) total,round(avg(u.packqty),0) PACKQUANTITY,sum(u.packcount) PACKCOUNT,sum(pscount) PSCOUNT
+salesQuery = """select u.materialcode,sum(u.pstotal) total,round(avg(u.packqty),0) PACKQUANTITY,sum(u.packcount) PACKCOUNT,sum(pscount) PSCOUNT
   From (
   select b.plucode,b.pluname,b.materialcode,
           b.pstotal*1000 pstotal,
@@ -162,14 +163,28 @@ group by materialcode"""
 #    skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
 #
 #skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal.xlsx')
+materialcodeQuery = """
+select p.MaterialCode,a.clscode
+  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
+where substr(a.clscode,1,1) = b.clscode 
+    and substr(a.clscode,1,3) = c.clscode 
+    and substr(a.clscode,1,5) = d.clscode 
+    and p.clsid = a.clsid
+    and substr(a.clscode,1,1) = 0
+    and p.MaterialCode is not null
+"""
+materialData = pd.read_sql(materialcodeQuery,con=con)
 
-skuData = pd.read_sql(skuQuery,con=con)
-del skuData['PRICE']
 
-cols = skuData.columns
-cols = list(cols)
-cols.append('TOTAL')
-fanxu = pd.DataFrame(columns=cols)
+
+
+#skuData = pd.read_sql(skuQuery,con=con)
+#del skuData['PRICE']
+
+#cols = skuData.columns
+#cols = list(cols)
+#cols.append('TOTAL')
+fanxu = pd.DataFrame()
 
 for m in month:
     print(m)
@@ -182,18 +197,24 @@ for m in month:
     data['PACKQUANTITY'] = data['PACKQUANTITY']/1000.0
     data['PACKCOUNT'] = data['PACKCOUNT']/1000.0
     data['PSCOUNT'] = data['PSCOUNT']/1000.0
-    temp = pd.merge(skuData,data,how='left', on=['MATERIALCODE'])
+    temp = pd.merge(materialData,data,how='left', on=['MATERIALCODE'])
     temp = pd.merge(temp,gpm,how='left',on=['MATERIALCODE'])
     temp['date'] = m[0]
+    
+    temp.drop(temp[temp['TOTAL'].isnull() & temp['PACKQUANTITY'].isnull() & temp['PACKCOUNT'].isnull() & temp['PSCOUNT'].isnull() & temp['SALESCOST'].isnull() & temp['SALESWITHOUTTAX'].isnull()].index,inplace=True)
+    
     temp['TOTAL'].fillna(0,inplace=True)
     temp['PSCOUNT'].fillna(0,inplace=True)
     temp['SALESCOST'].fillna(0,inplace=True)
     temp['SALESWITHOUTTAX'].fillna(0,inplace=True)
     temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
     
-    fanxu = pd.concat([fanxu,temp])
-
     
-
-fanxu.to_excel('c:\\Users\\150972\\Desktop\\fanxu-vertical.xlsx',index=False)
+    if m[0] == month[0][0]:
+        temp.to_csv('F:\\DataWarehouse\\SalesMonthFacts.csv',index=False)
+    else:
+        temp.to_csv('F:\\DataWarehouse\\SalesMonthFacts.csv',mode='a',header=False, index=False)
+    
+    #fanxu = pd.concat([fanxu,temp])
+    #fanxu.to_excel('c:\\Users\\150972\\Desktop\\fanxu-vertical.xlsx',index=False)
 

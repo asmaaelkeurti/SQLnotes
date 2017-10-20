@@ -117,7 +117,7 @@ for m in month:
     data['TOTAL'] = data['TOTAL']/1000.0
     data = data.rename(columns={'TOTAL':m[0]})
     skuData = pd.merge(skuData,data,how='left',on=['MATERIALCODE'])
-    #skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
+    skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
 
 skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal1.xlsx')
 
@@ -136,6 +136,7 @@ for m in month:
     temp = pd.merge(skuData,data,how='left', on=['MATERIALCODE'])
     temp['date'] = m[0]
     temp['TOTAL'].fillna(0,inplace=True)
+    temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
     fanxu = pd.concat([fanxu,temp])
 
     
