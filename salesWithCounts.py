@@ -39,27 +39,27 @@ con = oracle.connect('mganalyze/mganalyze@192.168.0.118/DRPMID')
 month = [
             ['2017-10-01','2017-10-31'],
             ['2017-09-01','2017-09-30'],
-            #['2017-08-01','2017-08-31'],
-            #['2017-07-01','2017-07-31'],
-            #['2017-06-01','2017-06-30'],
-            #['2017-05-01','2017-05-31'],
-            #['2017-04-01','2017-04-30'],
-            #['2017-03-01','2017-03-31'],
-            #['2017-02-01','2017-02-28'],
-            #['2017-01-01','2017-01-31'],
-            
-            #['2016-12-01','2016-12-31'],
-            #['2016-11-01','2016-11-30'],
-            #['2016-10-01','2016-10-31'],
-            #['2016-09-01','2016-09-30'],
-            #['2016-08-01','2016-08-31'],
-            #['2016-07-01','2016-07-31'],
-            #['2016-06-01','2016-06-30'],
-            #['2016-05-01','2016-05-31'],
-            #['2016-04-01','2016-04-30'],
-            #['2016-03-01','2016-03-31'],
-            #['2016-02-01','2016-02-29'],
-            #['2016-01-01','2016-01-31'],
+            ['2017-08-01','2017-08-31'],
+            ['2017-07-01','2017-07-31'],
+            ['2017-06-01','2017-06-30'],
+            ['2017-05-01','2017-05-31'],
+            ['2017-04-01','2017-04-30'],
+            ['2017-03-01','2017-03-31'],
+            ['2017-02-01','2017-02-28'],
+            ['2017-01-01','2017-01-31'],
+        
+            ['2016-12-01','2016-12-31'],
+            ['2016-11-01','2016-11-30'],
+            ['2016-10-01','2016-10-31'],
+            ['2016-09-01','2016-09-30'],
+            ['2016-08-01','2016-08-31'],
+            ['2016-07-01','2016-07-31'],
+            ['2016-06-01','2016-06-30'],
+            ['2016-05-01','2016-05-31'],
+            ['2016-04-01','2016-04-30'],
+            ['2016-03-01','2016-03-31'],
+            ['2016-02-01','2016-02-29'],
+            ['2016-01-01','2016-01-31'],
         ]
 
 
@@ -115,7 +115,7 @@ where substr(a.clscode,1,1) = b.clscode
                 Lane2018,Lane2017"""
 
 skuData = pd.read_sql(skuQuery,con=con)
-
+skuData.to_csv('F:\\DataWarehouse\\sku.csv',index=False)
 
 salesQuery = """ select u.materialcode,sum(u.pstotal) total,round(avg(u.packqty),0) PACKQUANTITY,sum(u.packcount) PACKCOUNT,sum(pscount) PSCOUNT
   From (
@@ -142,10 +142,10 @@ salesQuery = """ select u.materialcode,sum(u.pstotal) total,round(avg(u.packqty)
       and to_char(h.jzdate, 'YYYY-MM-DD') between '%s' and '%s') u 
   group by u.materialcode"""
 
-gpmQuery = """select materialcode, sum(Cost)*1000 SALESCOST, sum(Sales)*1000 SALESWITHOUTTAX 
-from GPM@finance 
+gpmQuery = """select materialcode, sum(costofgoodssold)*1000 costofgoodssold, sum(saleswithtax)*1000 SALESWITHTAX, sum(saleswithouttax)*1000 saleswithouttax 
+from grossprofitmargin 
 where CUSTTYPE = '分公司' 
-and lzdate between '%s' and '%s' 
+and shipdate between '%s' and '%s' 
 group by materialcode"""
 
 #gpmQuery = """select materialcode,sum(cost) salesCost,sum(sales) salesWithoutTax from GPM@finance where custtype='分公司' and lzdate between '2016-10-01' and '2016-10-10' group by materialcode"""
@@ -175,8 +175,9 @@ for m in month:
     print(m)
     data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
     gpm = pd.read_sql(gpmQuery % (m[0],m[1]),con=con)
-    gpm['SALESCOST'] = gpm['SALESCOST']/1000.0
+    gpm['COSTOFGOODSSOLD'] = gpm['COSTOFGOODSSOLD']/1000.0
     gpm['SALESWITHOUTTAX'] = gpm['SALESWITHOUTTAX']/1000.0
+    gpm['SALESWITHTAX'] = gpm['SALESWITHTAX']/1000.0
     
     data['TOTAL'] = data['TOTAL']/1000.0
     data['PACKQUANTITY'] = data['PACKQUANTITY']/1000.0

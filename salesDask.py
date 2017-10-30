@@ -143,10 +143,10 @@ salesQuery = """select u.materialcode,sum(u.pstotal) total,round(avg(u.packqty),
       and to_char(h.jzdate, 'YYYY-MM-DD') between '%s' and '%s') u 
   group by u.materialcode"""
 
-gpmQuery = """select materialcode, sum(Cost)*1000 SALESCOST, sum(Sales)*1000 SALESWITHOUTTAX 
-from GPM@finance 
+gpmQuery = """select materialcode, sum(costofgoodssold)*1000 costofgoodssold, sum(saleswithtax)*1000 SALESWITHTAX, sum(saleswithouttax)*1000 saleswithouttax 
+from grossprofitmargin@finance 
 where CUSTTYPE = '分公司' 
-and lzdate between '%s' and '%s' 
+and shipdate between '%s' and '%s' 
 group by materialcode"""
 
 #gpmQuery = """select materialcode,sum(cost) salesCost,sum(sales) salesWithoutTax from GPM@finance where custtype='分公司' and lzdate between '2016-10-01' and '2016-10-10' group by materialcode"""
@@ -190,8 +190,9 @@ for m in month:
     print(m)
     data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
     gpm = pd.read_sql(gpmQuery % (m[0],m[1]),con=con)
-    gpm['SALESCOST'] = gpm['SALESCOST']/1000.0
+    gpm['COSTOFGOODSSOLD'] = gpm['COSTOFGOODSSOLD']/1000.0
     gpm['SALESWITHOUTTAX'] = gpm['SALESWITHOUTTAX']/1000.0
+    gpm['SALESWITHTAX'] = gpm['SALESWITHTAX']/1000.0
     
     data['TOTAL'] = data['TOTAL']/1000.0
     data['PACKQUANTITY'] = data['PACKQUANTITY']/1000.0
@@ -201,13 +202,14 @@ for m in month:
     temp = pd.merge(temp,gpm,how='left',on=['MATERIALCODE'])
     temp['date'] = m[0]
     
-    temp.drop(temp[temp['TOTAL'].isnull() & temp['PACKQUANTITY'].isnull() & temp['PACKCOUNT'].isnull() & temp['PSCOUNT'].isnull() & temp['SALESCOST'].isnull() & temp['SALESWITHOUTTAX'].isnull()].index,inplace=True)
+    temp.drop(temp[temp['TOTAL'].isnull() & temp['PACKQUANTITY'].isnull() & temp['PACKCOUNT'].isnull() & temp['PSCOUNT'].isnull() & temp['COSTOFGOODSSOLD'].isnull() & temp['SALESWITHOUTTAX'].isnull() & temp['SALESWITHTAX'].isnull()].index,inplace=True)
     
     temp['TOTAL'].fillna(0,inplace=True)
     temp['PSCOUNT'].fillna(0,inplace=True)
-    temp['SALESCOST'].fillna(0,inplace=True)
+    temp['COSTOFGOODSSOLD'].fillna(0,inplace=True)
     temp['SALESWITHOUTTAX'].fillna(0,inplace=True)
-    temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
+    temp['SALESWITHTAX'].fillna(0,inplace=True)
+    #temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
     
     
     if m[0] == month[0][0]:
