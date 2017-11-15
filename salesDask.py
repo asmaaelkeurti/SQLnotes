@@ -65,7 +65,7 @@ month = [
 
 
 skuQuery = """select p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
-    Lane2018,Lane2017,
+    n.Lane2018,n.Lane2017,
     (case when f.evaluationname IS NOT NULL THEN f.evaluationname
           when e.clsname IS NOT NULL THEN '考试项目'
           when p.functionality = 'C' THEN '考试项目'
@@ -73,17 +73,16 @@ skuQuery = """select p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRD
           else '其它品类'
     END) adjusted
     from
-(select p.pluid, p.plucode, p.pluModel, p.MaterialCode, p.pluname, p.LRDate, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag,
-        n.Lane2018,n.Lane2017
-  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p, notSigned2018@finance n
+(select p.pluid, p.plucode, p.pluModel, p.MaterialCode, p.pluname, p.LRDate, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag
+  from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
 where substr(a.clscode,1,1) = b.clscode 
 		and substr(a.clscode,1,3) = c.clscode 
 		and substr(a.clscode,1,5) = d.clscode 
 		and p.clsid = a.clsid
 		and substr(a.clscode,1,1) = 0
-        and p.MaterialCode = n.MaterialCode
-        and p.PLUCODE = n.PLUCODE
         ) p 
+        left join notSigned2018@finance n
+            on p.MaterialCode = n.MaterialCode and p.PLUCODE = n.PLUCODE
         left join fanxu@finance f 
             on p.lowLevel = f.clsname
         left join otherExamItemList@finance e
@@ -113,7 +112,7 @@ where substr(a.clscode,1,1) = b.clscode
             group by b.materialcode
         )IPO on IPO.materialcode = p.materialcode
         group by p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
-                Lane2018,Lane2017"""
+                n.Lane2018,n.Lane2017"""
 
 skuData = pd.read_sql(skuQuery,con=con)
 skuData.to_csv('F:\\DataWarehouse\\sku.csv',index=False)

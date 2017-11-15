@@ -62,7 +62,7 @@ Select NULL as rzdate,h.branchno,h.customercode,b.plucode,-b.counts As counts, N
    And s.branchno = r.orgcode
    and c.isperfect='1' 
    And s.plucode = p.plucode And r.preorgcode = e.orgcode And p.pluid = e.pluid
-   and p.materialcode = 'AGPH5701110500H'
+   and p.materialcode = 'ARP509041138E1H'
    and s.branchno=f.etpcode
    And Exists(Select 1 From torgdrpdisp Where orgcode = s.branchno And remark Like '%%有效%%')  --有效配送中心
    And Exists(Select 1 From tcatcategory Where clsid = p.clsid And clscode Like '0%%' And clscode Not Like '011%%')  --晨光类
@@ -71,15 +71,15 @@ Select NULL as rzdate,h.branchno,h.customercode,b.plucode,-b.counts As counts, N
 c.isbangong, c.isjingpin, c.isxuesheng, c.custname,c.isperfect
 """
 
-for i in pd.date_range(date(2017,9,1),date(2017,10,20)):
+for i in pd.date_range(date(2017,6,1),date(2017,11,2)):
     d = i.strftime('%Y-%m-%d')
     print(d)
     data = pd.read_sql(query % (d,d,d,d),con=con)
     data['TOTALYS'] = data['TOTALYS']/1000.0
     data['PFTOTAL'] = data['PFTOTAL']/1000.0
     data['date'] = d
-    if i.strftime('%Y-%m-%d')==date(2017,9,1).strftime('%Y-%m-%d'):
-        data.to_csv('c:\\Users\\150972\\Desktop\\AGPH5701110500H.csv',header=True,index=False)
+    if i.strftime('%Y-%m-%d')==date(2017,6,1).strftime('%Y-%m-%d'):
+        data.to_csv('c:\\Users\\150972\\Desktop\\ARP509041138E1H.csv',header=True,index=False)
     else:
-        data.to_csv('c:\\Users\\150972\\Desktop\\AGPH5701110500H.csv',mode='a',header=False, index=False)
+        data.to_csv('c:\\Users\\150972\\Desktop\\ARP509041138E1H.csv',mode='a',header=False, index=False)
 
