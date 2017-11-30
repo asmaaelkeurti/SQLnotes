@@ -78,6 +78,22 @@ def asmaa():
 asmaa()
 
 
+import pandas as pd
+excpof2016 = pd.read_csv('C:\\Users\\150972\\Desktop\\working\\ExcludeCopyPaperOfficeChannel-2016-01-10.csv',encoding='gbk')
+excpof2016.dtypes
+excpof2016 = pd.read_csv('C:\\Users\\150972\\Desktop\\working\\ExcludeCopyPaperOfficeChannel-2016-01-10.csv',encoding='gbk',dtype={'KID':object,'CUSTCODE':object})
+excpof2016.dtypes
+excpof2016['cost'] = excpof2016['EXOFFICECOGS']/1000.0
+excpof2016.head(2)
+excpof2016['date'] = 2016
+excpof2016.head(2)
+del excpof2016['EXOFFICECOGS']
+excpof2016.head(2)
+excpof2016['category'] = '除复印纸办公渠道'
+excpof2016.head(2)
+excpof2016 = pd.read_csv('C:\\Users\\150972\\Desktop\\working\\ExcludeCopyPaperOfficeChannel-2017-01-10.csv',encoding='gbk',dtype={'KID':object,'CUSTCODE':object})
+excpof2016 = pd.read_csv('C:\\Users\\150972\\Desktop\\working\\ExcludeCopyPaperOfficeChannel-2016-01-10.csv',encoding='gbk',dtype={'KID':object,'CUSTCODE':object})
+
 
 
 

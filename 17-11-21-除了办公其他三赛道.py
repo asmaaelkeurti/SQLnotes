@@ -46,7 +46,7 @@ Select NULL as rzdate,h.branchno,h.customercode,b.plucode,-b.counts As counts, -
    And h.rzdate Between '%s' And '%s'
        ) s,
   tdrpetpcustdetail c,
-  torgdrprelation r,tskuplu p,tskuetpparas e,tcatcategory a, notsigned2018@finance n
+  torgdrprelation r,tskuplu p,tskuetpparas e,tcatcategory a, torgdrpdisp d,notsigned2018@finance n
  Where s.branchno = c.orgcode 
    And s.customercode = c.custcode 
    And s.branchno = r.orgcode
