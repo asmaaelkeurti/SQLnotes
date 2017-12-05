@@ -30,6 +30,7 @@ import pandas as pd
 
 con = oracle.connect('mganalyze/mganalyze@192.168.0.118/DRPMID')
 month = [   
+            ['2017-11-01','2017-11-30'],
             ['2017-10-01','2017-10-31'],
             ['2017-09-01','2017-09-30'],
             ['2017-08-01','2017-08-31'],
@@ -120,7 +121,7 @@ where substr(a.clscode,1,1) = b.clscode
 		and substr(a.clscode,1,5) = d.clscode 
 		and p.clsid = a.clsid
 		and substr(a.clscode,1,1) = 0
-       and substr(a.clscode,1,3) <> 011
+       --and substr(a.clscode,1,3) <> 011
         ) p 
         left join notSigned2018@finance n
             on p.MaterialCode = n.MaterialCode and p.PLUCODE = n.PLUCODE
@@ -164,14 +165,14 @@ salesQuery = """select u.materialcode,sum(u.pstotal) total
   select b.plucode,b.pluname,b.materialcode,b.pstotal*1000 pstotal
   from tdstpshead h, tdstpsbody b
   where h.billno = b.billno
-      and h.orgcode in ('1', '2') --h.depid in ('10010000000021','10010000000022')  
+      and h.orgcode in ('1', '2','5') --h.depid in ('10010000000021','10010000000022')  
       and h.depid <> '10010000000023' --部门
       and to_char(h.jzdate, 'YYYY-MM-DD') between '%s' and '%s' 
   union all
   select b.plucode, b.pluname, b.materialcode, -b.thtotal*1000 pstotal
   from tdstrtnhead h,tdstrtnbody b
   where h.billno = b.billno
-      and h.orgcode in ('1', '2') --h.depid in ('10010000000021','10010000000022')  
+      and h.orgcode in ('1', '2','5') --h.depid in ('10010000000021','10010000000022')  
       and h.depid <> '10010000000023' --部门
       and to_char(h.jzdate, 'YYYY-MM-DD') between '%s' and '%s') u 
   group by u.materialcode"""
@@ -185,27 +186,27 @@ for m in month:
     skuData = pd.merge(skuData,data,how='left',on=['MATERIALCODE'])
     skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
 
-skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal1.xlsx')
+skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal.xlsx')
 
-skuData = pd.read_sql(skuQuery,con=con)
-del skuData['PRICE']
-
-cols = skuData.columns
-cols = list(cols)
-cols.append('TOTAL')
-fanxu = pd.DataFrame(columns=cols)
-
-for m in month:
-    print(m)
-    data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
-    data['TOTAL'] = data['TOTAL']/1000.0
-    temp = pd.merge(skuData,data,how='left', on=['MATERIALCODE'])
-    temp['date'] = m[0]
-    temp['TOTAL'].fillna(0,inplace=True)
-    temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
-    fanxu = pd.concat([fanxu,temp])
-
-    
-
-fanxu.to_excel('c:\\Users\\150972\\Desktop\\fanxu-vertical.xlsx',index=False)
+#skuData = pd.read_sql(skuQuery,con=con)
+#del skuData['PRICE']
+#
+#cols = skuData.columns
+#cols = list(cols)
+#cols.append('TOTAL')
+#fanxu = pd.DataFrame(columns=cols)
+#
+#for m in month:
+#    print(m)
+#    data = pd.read_sql(salesQuery % (m[0],m[1],m[0],m[1]),con=con)
+#    data['TOTAL'] = data['TOTAL']/1000.0
+#    temp = pd.merge(skuData,data,how='left', on=['MATERIALCODE'])
+#    temp['date'] = m[0]
+#    temp['TOTAL'].fillna(0,inplace=True)
+#    temp.loc[temp['CLSCODE']=='0100101','TOTAL'] = temp.loc[temp['CLSCODE']=='0100101','TOTAL']/2.0
+#    fanxu = pd.concat([fanxu,temp])
+#
+#    
+#
+#fanxu.to_excel('c:\\Users\\150972\\Desktop\\fanxu-vertical.xlsx',index=False)
 
