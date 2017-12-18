@@ -149,7 +149,7 @@ where substr(a.clscode,1,1) = b.clscode
             select b.materialcode,min(h.jzdate) listDate
             from tdstpshead h, tdstpsbody b
             where h.billno = b.billno
-                and h.orgcode in ('1', '2') --h.depid in ('10010000000021','10010000000022')  
+                and h.orgcode in ('1', '2','5') --h.depid in ('10010000000021','10010000000022')  
                 and h.depid <> '10010000000023' --部门
             group by b.materialcode
         )IPO on IPO.materialcode = p.materialcode

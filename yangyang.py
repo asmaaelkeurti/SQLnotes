@@ -165,6 +165,16 @@ where     h.billno = b.billno
 group by fgscode,etpcode,plucode, materialcode
 """
 
+custQuery = """
+Select c.kid,c.custcode,c.orgcode,r.orgname,f.postcode,fgs.orgcode as fgsorgcode,fgs.orgname as fgsorgname,d.remark,c.isxuesheng,c.isjingpin,c.isbangong,c.isperfect
+  From  tdrpetpcustdetail c,
+  torgdrprelation r,TETPENTERPRISE f,torgdrprelation fgs,torgdrpdisp d
+ Where c.orgcode = r.orgcode
+   and c.orgcode = f.etpcode
+   and d.orgcode = c.orgcode
+   And r.preorgcode = fgs.orgcode
+"""
+
 def asmaa():
     for m in month:
         print(m)
@@ -196,7 +206,11 @@ def branch():
         else:
             data.to_csv('F:\\DataWarehouse\\8x4\\BranchMonthFacts.csv',mode='a',header=False, index=False)
             
-branch()
+def custListAll():
+    custList = pd.read_sql(custQuery,con=con)
+    custList.to_csv('F:\\DataWarehouse\\CustListAll.csv',index=False)
+
+custListAll()
 
 
 
