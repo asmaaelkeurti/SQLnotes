@@ -30,6 +30,7 @@ import pandas as pd
 
 con = oracle.connect('mganalyze/mganalyze@192.168.0.118/DRPMID')
 month = [   
+            ['2017-12-01','2017-12-31'],
             ['2017-11-01','2017-11-30'],
             ['2017-10-01','2017-10-31'],
             ['2017-09-01','2017-09-30'],
@@ -105,8 +106,8 @@ where substr(a.clscode,1,1) = b.clscode
         group by p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,
                 Lane2018,Lane2017"""
                 
-skuQuery = """select p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
-    n.Lane2018,n.Lane2017,
+skuQuery = """select p.pluid,p.plucode,p.cargono,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
+    n.Lane2017,
     (case when f.evaluationname IS NOT NULL THEN f.evaluationname
           when e.clsname IS NOT NULL THEN '考试项目'
           when p.functionality = 'C' THEN '考试项目'
@@ -114,17 +115,16 @@ skuQuery = """select p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRD
           else '其它品类'
     END) adjusted
     from
-(select p.pluid, p.plucode, p.pluModel, p.MaterialCode, p.pluname, p.LRDate, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag
+(select p.pluid, p.plucode, p.cargono,p.pluModel, p.MaterialCode, p.pluname, p.LRDate, p.clsid, a.clscode, b.clsname product,c.clsname highLevel,d.clsname midLevel,a.clsname lowLevel, p.udp9 functionality, p.udp14 flag
   from tcatcategory a, tcatcategory b, tcatcategory c, tcatcategory d,  tskuplu p
 where substr(a.clscode,1,1) = b.clscode 
-		and substr(a.clscode,1,3) = c.clscode 
-		and substr(a.clscode,1,5) = d.clscode 
-		and p.clsid = a.clsid
-		and substr(a.clscode,1,1) = 0
-       --and substr(a.clscode,1,3) <> 011
+    and substr(a.clscode,1,3) = c.clscode 
+    and substr(a.clscode,1,5) = d.clscode 
+    and p.clsid = a.clsid
+    and substr(a.clscode,1,1) = 0
         ) p 
         left join notSigned2018@finance n
-            on p.MaterialCode = n.MaterialCode and p.PLUCODE = n.PLUCODE
+            on p.pluid = n.pluid
         left join fanxu@finance f 
             on p.lowLevel = f.clsname
         left join otherExamItemList@finance e
@@ -153,8 +153,8 @@ where substr(a.clscode,1,1) = b.clscode
                 and h.depid <> '10010000000023' --部门
             group by b.materialcode
         )IPO on IPO.materialcode = p.materialcode
-        group by p.pluid,p.plucode,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
-                n.Lane2018,n.Lane2017
+        group by p.pluid,p.plucode,p.cargono,p.pluModel,p.materialcode,p.pluname,p.LRDate,p.clsid,p.clscode,p.product, p.highlevel, p.midlevel, p.lowlevel, p.functionality, p.flag, e.clsname, f.evaluationname,price.price,sd.sdtotal,IPO.listDate,
+                n.Lane2017
 """
 
 skuData = pd.read_sql(skuQuery,con=con)
@@ -186,7 +186,7 @@ for m in month:
     skuData = pd.merge(skuData,data,how='left',on=['MATERIALCODE'])
     skuData.loc[skuData['CLSCODE']=='0100101',m[0]] = skuData.loc[skuData['CLSCODE']=='0100101',m[0]]/2.0
 
-skuData.to_excel('c:\\Users\\150972\\Desktop\\fanxu-horizontal.xlsx')
+skuData.to_csv('c:\\Users\\150972\\Desktop\\fanxu-horizontal.csv')
 
 #skuData = pd.read_sql(skuQuery,con=con)
 #del skuData['PRICE']

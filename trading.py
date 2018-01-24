@@ -3,10 +3,13 @@ import quandl
 import matplotlib.pyplot as plt
 import numpy as np
 
+# gold data
 #asmaa = quandl.get("LBMA/GOLD", uthtoken="MU4755ALSYYj1suiJgsd",start_date="2000-01-01")[['USD (AM)']].rename(columns={'USD (AM)':'price'})
 
 #a = a.rename(columns={'USD (AM)':'price'})
 
+# spy data
+#cassan = pd.read_csv('C:\\Users\\150972\\Desktop\\working\\HistoricalQuotes.csv')
 
 class account:
     def __init__(self,init):
